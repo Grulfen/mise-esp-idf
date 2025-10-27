@@ -91,13 +91,13 @@ function PLUGIN:EnvKeys(ctx)
     })
 
     -- Platform-specific additions
-    if RUNTIME.osType == "Darwin" then
+    if RUNTIME.osType == "Darwin" then -- luacheck: ignore 113
         -- macOS specific paths if needed
         table.insert(env_vars, {
             key = "DYLD_LIBRARY_PATH",
             value = mainPath .. "/tools/lib",
         })
-    elseif RUNTIME.osType == "Linux" then
+    elseif RUNTIME.osType == "Linux" then -- luacheck: ignore 113
         -- Linux specific paths
         table.insert(env_vars, {
             key = "LD_LIBRARY_PATH",

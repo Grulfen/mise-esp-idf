@@ -37,12 +37,6 @@ function PLUGIN:PostInstall(ctx)
     end
 
     -- Run ESP-IDF install script
-    local installScript = path .. "/install.sh"
-    if RUNTIME.osType == "Darwin" then
-        -- On macOS, we might need different handling
-        installScript = path .. "/install.sh"
-    end
-
     print("Installing ESP-IDF tools for targets: " .. targets)
     local installCmd = string.format("cd %s && ./install.sh %s", path, targets)
     local installResult = os.execute(installCmd)
