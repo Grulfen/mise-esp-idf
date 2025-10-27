@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#MISE description="Run ESP-IDF plugin tests - install and verify setup"
+set -euo pipefail
+
+echo "Testing ESP-IDF mise plugin..."
+
+mise plugin link --force esp-idf .
+mise cache clear
+mise install esp-idf@5.3.0
+
+echo "Testing ESP-IDF installation..."
+
+# Test that IDF_PATH is set correctly
+output=$(mise exec "esp-idf@5.3.0" -- bash -c 'echo $IDF_PATH')
+echo "IDF_PATH: $output"
+
+# Test that idf.py is available and working
+idf_version=$(mise exec "esp-idf@5.3.0" -- idf.py --version 2>&1)
+echo "idf.py version output: $idf_version"
+
+# Test that the verification script works
+verify_output=$(mise exec "esp-idf@5.3.0" -- esp-idf-verify)
+echo "Verification: $verify_output"
+
+if echo "$verify_output" | grep -q "ESP-IDF 5.3.0 is properly installed"; then
+    echo "✓ ESP-IDF plugin tests passed"
+else
+    echo "✗ Test failed: ESP-IDF verification failed"
+    exit 1
+fi
