@@ -6,10 +6,10 @@ function PLUGIN:EnvKeys(ctx)
     local mainPath = ctx.path
     local sdkInfo = ctx.sdkInfo[PLUGIN.name]
     local version = sdkInfo.version
-    
+
     -- Get the home directory
     local home = os.getenv("HOME")
-    
+
     -- ESP-IDF requires several environment variables to function properly
     -- These mirror what the export.sh script would normally set
     local env_vars = {
@@ -33,10 +33,10 @@ function PLUGIN:EnvKeys(ctx)
     -- Add ESP-IDF component paths that export.sh normally adds
     local component_paths = {
         mainPath .. "/components/espcoredump",
-        mainPath .. "/components/partition_table", 
-        mainPath .. "/components/app_update"
+        mainPath .. "/components/partition_table",
+        mainPath .. "/components/app_update",
     }
-    
+
     for _, comp_path in ipairs(component_paths) do
         table.insert(env_vars, {
             key = "PATH",
@@ -50,11 +50,11 @@ function PLUGIN:EnvKeys(ctx)
         espressif_tools .. "/xtensa-esp-elf-gdb/16.2_20250324/xtensa-esp-elf-gdb/bin",
         espressif_tools .. "/riscv32-esp-elf-gdb/16.2_20250324/riscv32-esp-elf-gdb/bin",
         espressif_tools .. "/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin",
-        espressif_tools .. "/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin", 
+        espressif_tools .. "/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin",
         espressif_tools .. "/esp32ulp-elf/2.38_20240113/esp32ulp-elf/bin",
-        espressif_tools .. "/openocd-esp32/v0.12.0-esp32-20250707/openocd-esp32/bin"
+        espressif_tools .. "/openocd-esp32/v0.12.0-esp32-20250707/openocd-esp32/bin",
     }
-    
+
     for _, tool_path in ipairs(tool_paths) do
         table.insert(env_vars, {
             key = "PATH",
@@ -65,9 +65,14 @@ function PLUGIN:EnvKeys(ctx)
     -- Add Python virtual environment (critical for idf.py to work)
     local python_venv_major = version:match("^(%d+)%.%d+")
     local python_venv_minor = version:match("^%d+%.(%d+)")
-    local python_venv_base = home .. "/.espressif/python_env/idf" .. python_venv_major .. "." .. python_venv_minor .. "_py3.9_env"
+    local python_venv_base = home
+        .. "/.espressif/python_env/idf"
+        .. python_venv_major
+        .. "."
+        .. python_venv_minor
+        .. "_py3.9_env"
     local python_venv_bin = python_venv_base .. "/bin"
-    
+
     table.insert(env_vars, {
         key = "PATH",
         value = python_venv_bin,
@@ -95,7 +100,7 @@ function PLUGIN:EnvKeys(ctx)
     elseif RUNTIME.osType == "Linux" then
         -- Linux specific paths
         table.insert(env_vars, {
-            key = "LD_LIBRARY_PATH", 
+            key = "LD_LIBRARY_PATH",
             value = mainPath .. "/tools/lib",
         })
     end

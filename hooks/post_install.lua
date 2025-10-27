@@ -17,11 +17,9 @@ function PLUGIN:PostInstall(ctx)
     os.execute("rm -rf " .. path)
 
     -- Clone ESP-IDF repository with the specific version
-    local gitCloneCmd = string.format(
-        "git clone -b v%s --recursive https://github.com/espressif/esp-idf.git %s",
-        version, path
-    )
-    
+    local gitCloneCmd =
+        string.format("git clone -b v%s --recursive https://github.com/espressif/esp-idf.git %s", version, path)
+
     print("Cloning ESP-IDF v" .. version .. "...")
     local cloneResult = os.execute(gitCloneCmd)
     if cloneResult ~= 0 then
@@ -29,8 +27,8 @@ function PLUGIN:PostInstall(ctx)
     end
 
     -- Determine target chips based on version
-    local targets = "all"  -- Install all targets by default
-    
+    local targets = "all" -- Install all targets by default
+
     -- For older versions, we might want to be more specific
     if version:match("^4%.") then
         targets = "esp32,esp32s2"
@@ -54,7 +52,7 @@ function PLUGIN:PostInstall(ctx)
 
     -- Create scripts for ESP-IDF usage
     os.execute("mkdir -p " .. path .. "/bin")
-    
+
     -- Create a verification script
     local verifyScript = path .. "/bin/esp-idf-verify"
     local file = io.open(verifyScript, "w")
@@ -63,10 +61,10 @@ function PLUGIN:PostInstall(ctx)
         file:write("# ESP-IDF verification script\n")
         file:write("source " .. path .. "/export.sh > /dev/null 2>&1\n")
         file:write("if command -v idf.py > /dev/null 2>&1; then\n")
-        file:write("  echo \"ESP-IDF " .. version .. " is properly installed\"\n")
+        file:write('  echo "ESP-IDF ' .. version .. ' is properly installed"\n')
         file:write("  exit 0\n")
         file:write("else\n")
-        file:write("  echo \"ESP-IDF installation verification failed\"\n")
+        file:write('  echo "ESP-IDF installation verification failed"\n')
         file:write("  exit 1\n")
         file:write("fi\n")
         file:close()
@@ -80,8 +78,8 @@ function PLUGIN:PostInstall(ctx)
         wrapperFile:write("#!/bin/bash\n")
         wrapperFile:write("# ESP-IDF idf.py wrapper script\n")
         wrapperFile:write("# This script properly sources the ESP-IDF environment before calling idf.py\n")
-        wrapperFile:write("source \"$IDF_PATH/export.sh\" > /dev/null 2>&1\n")
-        wrapperFile:write("exec \"$IDF_PATH/tools/idf.py\" \"$@\"\n")
+        wrapperFile:write('source "$IDF_PATH/export.sh" > /dev/null 2>&1\n')
+        wrapperFile:write('exec "$IDF_PATH/tools/idf.py" "$@"\n')
         wrapperFile:close()
         os.execute("chmod +x " .. idfWrapper)
     end
