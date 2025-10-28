@@ -32,15 +32,8 @@ function PLUGIN:Available(ctx)
 
         -- Skip non-release tags (like pre-release candidates)
         if version:match("^%d+%.%d+") then
-            -- Determine if this is an LTS version (currently v4.4.x and v5.0.x are LTS)
-            local note = nil
-            if version:match("^4%.4%.") or version:match("^5%.0%.") then
-                note = "lts"
-            end
-
             table.insert(result, {
                 version = version,
-                note = note,
             })
         end
     end
