@@ -4,11 +4,6 @@
 
 function PLUGIN:EnvKeys(ctx)
     local mainPath = ctx.path
-    local sdkInfo = ctx.sdkInfo[PLUGIN.name]
-    local version = sdkInfo.version
-
-    -- Get the home directory
-    local home = os.getenv("HOME")
 
     -- ESP-IDF requires several environment variables to function properly
     -- These mirror what the export.sh script would normally set
@@ -55,47 +50,8 @@ function PLUGIN:EnvKeys(ctx)
         handle:close()
     end
 
-    -- Add Python virtual environment (critical for idf.py to work)
-    -- Dynamically detect the Python venv directory instead of hardcoding Python version
-    local python_venv_major = version:match("^(%d+)%.%d+")
-    local python_venv_minor = version:match("^%d+%.(%d+)")
-    local python_venv_pattern = home
-        .. "/.espressif/python_env/idf"
-        .. python_venv_major
-        .. "."
-        .. python_venv_minor
-        .. "_py*_env"
-
-    -- Find the actual Python venv directory using shell glob
-    local find_cmd = "ls -d " .. python_venv_pattern .. " 2>/dev/null | head -n 1"
-    local py_handle = io.popen(find_cmd)
-    local python_venv_base = nil
-    if py_handle then
-        python_venv_base = py_handle:read("*l")
-        py_handle:close()
-    end
-
-    -- If we found a Python venv, add it to the environment
-    if python_venv_base and python_venv_base ~= "" then
-        local python_venv_bin = python_venv_base .. "/bin"
-
-        table.insert(env_vars, {
-            key = "PATH",
-            value = python_venv_bin,
-        })
-
-        -- Set VIRTUAL_ENV for Python virtual environment
-        table.insert(env_vars, {
-            key = "VIRTUAL_ENV",
-            value = python_venv_base,
-        })
-
-        -- Set IDF_PYTHON_ENV_PATH (required by ESP-IDF)
-        table.insert(env_vars, {
-            key = "IDF_PYTHON_ENV_PATH",
-            value = python_venv_base,
-        })
-    end
+    -- Note: Python virtual environment variables (VIRTUAL_ENV, IDF_PYTHON_ENV_PATH)
+    -- and Python venv PATH entries are automatically provided by idf_tools.py export above
 
     -- Platform-specific additions
     if RUNTIME.osType == "Darwin" then -- luacheck: ignore 113
