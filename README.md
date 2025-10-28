@@ -22,9 +22,6 @@ mise install esp-idf@latest
 
 # Install specific version
 mise install esp-idf@5.4.2
-
-# Install LTS version  
-mise install esp-idf@5.0.7
 ```
 
 Set ESP-IDF version for your project:
@@ -71,11 +68,7 @@ mise install  # Installs the specified ESP-IDF version
 
 ## Supported Versions
 
-This plugin supports all ESP-IDF releases available on GitHub. LTS versions are marked accordingly:
-
-- 4.4.x series (LTS)
-- 5.0.x series (LTS) 
-- 5.1.x+ series (Latest)
+This plugin supports all ESP-IDF releases available on GitHub.
 
 ## Requirements
 
