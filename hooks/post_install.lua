@@ -16,11 +16,13 @@ function PLUGIN:PostInstall(ctx)
     -- Remove the path if it exists (mise might have created an empty directory)
     os.execute("rm -rf " .. path)
 
-    -- Clone ESP-IDF repository with the specific version
-    local gitCloneCmd =
-        string.format("git clone -b v%s --recursive https://github.com/espressif/esp-idf.git %s", version, path)
+    -- Clone ESP-IDF repository with the specific version (quietly)
+    local gitCloneCmd = string.format(
+        "git clone --quiet -b v%s --recursive https://github.com/espressif/esp-idf.git %s 2>&1",
+        version,
+        path
+    )
 
-    print("Cloning ESP-IDF v" .. version .. "...")
     local cloneResult = os.execute(gitCloneCmd)
     if cloneResult ~= 0 then
         error("Failed to clone ESP-IDF repository for version " .. version)
@@ -29,9 +31,8 @@ function PLUGIN:PostInstall(ctx)
     -- Determine target chips based on version
     local targets = "all" -- Install all targets by default
 
-    -- Run ESP-IDF install script
-    print("Installing ESP-IDF tools for targets: " .. targets)
-    local installCmd = string.format("cd %s && ./install.sh %s", path, targets)
+    -- Run ESP-IDF install script (redirect output to reduce noise)
+    local installCmd = string.format("cd %s && ./install.sh %s > /dev/null 2>&1", path, targets)
     local installResult = os.execute(installCmd)
     if installResult ~= 0 then
         error("Failed to install ESP-IDF tools")
@@ -57,6 +58,4 @@ function PLUGIN:PostInstall(ctx)
         file:close()
         os.execute("chmod +x " .. verifyScript)
     end
-
-    print("ESP-IDF " .. version .. " installation completed successfully")
 end
