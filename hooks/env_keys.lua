@@ -13,11 +13,6 @@ function PLUGIN:EnvKeys(ctx)
             key = "IDF_PATH",
             value = mainPath,
         },
-        -- Add ESP-IDF tools directory to PATH (contains idf.py)
-        {
-            key = "PATH",
-            value = mainPath .. "/tools",
-        },
     }
 
     -- Use idf_tools.py to get the correct environment for this ESP-IDF version
