@@ -23,11 +23,6 @@ function PLUGIN:EnvKeys(ctx)
             key = "PATH",
             value = mainPath .. "/tools",
         },
-        -- Add our custom bin directory to PATH (contains verification script)
-        {
-            key = "PATH",
-            value = mainPath .. "/bin",
-        },
     }
 
     -- Add ESP-IDF component paths that export.sh normally adds

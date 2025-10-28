@@ -37,25 +37,4 @@ function PLUGIN:PostInstall(ctx)
     if installResult ~= 0 then
         error("Failed to install ESP-IDF tools")
     end
-
-    -- Create scripts for ESP-IDF usage
-    os.execute("mkdir -p " .. path .. "/bin")
-
-    -- Create a verification script
-    local verifyScript = path .. "/bin/esp-idf-verify"
-    local file = io.open(verifyScript, "w")
-    if file then
-        file:write("#!/bin/bash\n")
-        file:write("# ESP-IDF verification script\n")
-        file:write("source " .. path .. "/export.sh > /dev/null 2>&1\n")
-        file:write("if command -v idf.py > /dev/null 2>&1; then\n")
-        file:write('  echo "ESP-IDF ' .. version .. ' is properly installed"\n')
-        file:write("  exit 0\n")
-        file:write("else\n")
-        file:write('  echo "ESP-IDF installation verification failed"\n')
-        file:write("  exit 1\n")
-        file:write("fi\n")
-        file:close()
-        os.execute("chmod +x " .. verifyScript)
-    end
 end

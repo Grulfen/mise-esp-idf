@@ -18,13 +18,9 @@ echo "IDF_PATH: $output"
 idf_version=$(mise exec "esp-idf@5.4.2" -- idf.py --version 2>&1)
 echo "idf.py version output: $idf_version"
 
-# Test that the verification script works
-verify_output=$(mise exec "esp-idf@5.4.2" -- esp-idf-verify)
-echo "Verification: $verify_output"
-
-if echo "$verify_output" | grep -q "ESP-IDF 5.4.2 is properly installed"; then
+if echo "$idf_version" | grep -q "ESP-IDF"; then
     echo "✓ ESP-IDF plugin tests passed"
 else
-    echo "✗ Test failed: ESP-IDF verification failed"
+    echo "✗ Test failed: idf.py not working properly"
     exit 1
 fi

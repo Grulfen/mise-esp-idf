@@ -17,7 +17,6 @@ The plugin follows the mise plugin lifecycle with four hook files in `hooks/`:
 3. **post_install.lua** - Core installation logic:
    - Clones the ESP-IDF git repository for the requested version (quietly with --quiet flag)
    - Runs `install.sh` to set up ESP-IDF toolchains (output redirected to reduce noise)
-   - Creates a verification script in `bin/esp-idf-verify`
 
 4. **env_keys.lua** - Configures environment variables:
    - Sets `IDF_PATH` to the installation directory
@@ -89,6 +88,5 @@ The integration test (mise-tasks/test) performs a real installation:
 2. Installs ESP-IDF 5.3.0
 3. Verifies `IDF_PATH` is set
 4. Checks `idf.py --version` works
-5. Runs the `esp-idf-verify` script
 
 This test takes several minutes as it clones the full ESP-IDF repository and installs toolchains.
