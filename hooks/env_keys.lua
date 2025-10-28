@@ -63,32 +63,46 @@ function PLUGIN:EnvKeys(ctx)
     end
 
     -- Add Python virtual environment (critical for idf.py to work)
+    -- Dynamically detect the Python venv directory instead of hardcoding Python version
     local python_venv_major = version:match("^(%d+)%.%d+")
     local python_venv_minor = version:match("^%d+%.(%d+)")
-    local python_venv_base = home
+    local python_venv_pattern = home
         .. "/.espressif/python_env/idf"
         .. python_venv_major
         .. "."
         .. python_venv_minor
-        .. "_py3.9_env"
-    local python_venv_bin = python_venv_base .. "/bin"
+        .. "_py*_env"
 
-    table.insert(env_vars, {
-        key = "PATH",
-        value = python_venv_bin,
-    })
+    -- Find the actual Python venv directory using shell glob
+    local find_cmd = "ls -d " .. python_venv_pattern .. " 2>/dev/null | head -n 1"
+    local handle = io.popen(find_cmd)
+    local python_venv_base = nil
+    if handle then
+        python_venv_base = handle:read("*l")
+        handle:close()
+    end
 
-    -- Set VIRTUAL_ENV for Python virtual environment
-    table.insert(env_vars, {
-        key = "VIRTUAL_ENV",
-        value = python_venv_base,
-    })
+    -- If we found a Python venv, add it to the environment
+    if python_venv_base and python_venv_base ~= "" then
+        local python_venv_bin = python_venv_base .. "/bin"
 
-    -- Set IDF_PYTHON_ENV_PATH (required by ESP-IDF)
-    table.insert(env_vars, {
-        key = "IDF_PYTHON_ENV_PATH",
-        value = python_venv_base,
-    })
+        table.insert(env_vars, {
+            key = "PATH",
+            value = python_venv_bin,
+        })
+
+        -- Set VIRTUAL_ENV for Python virtual environment
+        table.insert(env_vars, {
+            key = "VIRTUAL_ENV",
+            value = python_venv_base,
+        })
+
+        -- Set IDF_PYTHON_ENV_PATH (required by ESP-IDF)
+        table.insert(env_vars, {
+            key = "IDF_PYTHON_ENV_PATH",
+            value = python_venv_base,
+        })
+    end
 
     -- Platform-specific additions
     if RUNTIME.osType == "Darwin" then -- luacheck: ignore 113
