@@ -25,36 +25,34 @@ function PLUGIN:EnvKeys(ctx)
         },
     }
 
-    -- Add ESP-IDF component paths that export.sh normally adds
-    local component_paths = {
-        mainPath .. "/components/espcoredump",
-        mainPath .. "/components/partition_table",
-        mainPath .. "/components/app_update",
-    }
-
-    for _, comp_path in ipairs(component_paths) do
-        table.insert(env_vars, {
-            key = "PATH",
-            value = comp_path,
-        })
-    end
-
-    -- Add ESP-IDF installed tools paths (these are what export.sh discovers)
-    local espressif_tools = home .. "/.espressif/tools"
-    local tool_paths = {
-        espressif_tools .. "/xtensa-esp-elf-gdb/16.2_20250324/xtensa-esp-elf-gdb/bin",
-        espressif_tools .. "/riscv32-esp-elf-gdb/16.2_20250324/riscv32-esp-elf-gdb/bin",
-        espressif_tools .. "/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin",
-        espressif_tools .. "/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin",
-        espressif_tools .. "/esp32ulp-elf/2.38_20240113/esp32ulp-elf/bin",
-        espressif_tools .. "/openocd-esp32/v0.12.0-esp32-20250707/openocd-esp32/bin",
-    }
-
-    for _, tool_path in ipairs(tool_paths) do
-        table.insert(env_vars, {
-            key = "PATH",
-            value = tool_path,
-        })
+    -- Use idf_tools.py to get the correct environment for this ESP-IDF version
+    local idf_tools_cmd = string.format("python3 %s/tools/idf_tools.py export --format=key-value 2>/dev/null", mainPath)
+    local handle = io.popen(idf_tools_cmd)
+    if handle then
+        for line in handle:lines() do
+            -- Parse key=value pairs
+            local key, value = line:match("^([^=]+)=(.*)$")
+            if key and value then
+                if key == "PATH" then
+                    -- Split PATH by colon and add each directory (except the $PATH placeholder)
+                    for path_entry in value:gmatch("([^:]+)") do
+                        if path_entry ~= "$PATH" and path_entry ~= "" then
+                            table.insert(env_vars, {
+                                key = "PATH",
+                                value = path_entry,
+                            })
+                        end
+                    end
+                elseif key ~= "IDF_DEACTIVATE_FILE_PATH" then
+                    -- Add other environment variables (skip the temp deactivate file)
+                    table.insert(env_vars, {
+                        key = key,
+                        value = value,
+                    })
+                end
+            end
+        end
+        handle:close()
     end
 
     -- Add Python virtual environment (critical for idf.py to work)
@@ -70,11 +68,11 @@ function PLUGIN:EnvKeys(ctx)
 
     -- Find the actual Python venv directory using shell glob
     local find_cmd = "ls -d " .. python_venv_pattern .. " 2>/dev/null | head -n 1"
-    local handle = io.popen(find_cmd)
+    local py_handle = io.popen(find_cmd)
     local python_venv_base = nil
-    if handle then
-        python_venv_base = handle:read("*l")
-        handle:close()
+    if py_handle then
+        python_venv_base = py_handle:read("*l")
+        py_handle:close()
     end
 
     -- If we found a Python venv, add it to the environment

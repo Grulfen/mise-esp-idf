@@ -20,9 +20,9 @@ The plugin follows the mise plugin lifecycle with four hook files in `hooks/`:
 
 4. **env_keys.lua** - Configures environment variables:
    - Sets `IDF_PATH` to the installation directory
-   - Adds ESP-IDF tools and Python virtual environment to `PATH`
+   - Calls `idf_tools.py export --format=key-value` to get the correct environment for the specific ESP-IDF version
+   - Parses and adds all tool paths, Python virtual environment, and other variables (OPENOCD_SCRIPTS, ESP_ROM_ELF_DIR, etc.)
    - Sets platform-specific library paths (`DYLD_LIBRARY_PATH` for macOS, `LD_LIBRARY_PATH` for Linux)
-   - Hardcodes paths to Espressif toolchain binaries in `~/.espressif/tools/`
 
 ## Development Commands
 
@@ -70,16 +70,15 @@ ESP-IDF tags have a `v` prefix on GitHub (e.g., `v5.3.0`). The plugin:
 - Re-adds the `v` prefix when cloning in post_install.lua
 
 ### Toolchain Target Selection
-The post_install.lua hook selects ESP32 targets based on version:
-- v4.x: `esp32,esp32s2`
-- v5.0.x: `esp32,esp32s2,esp32s3,esp32c3`
-- v5.1+: `all`
+The post_install.lua hook installs all ESP32 targets by default using `./install.sh all`.
 
-### Environment Variable Hardcoding
-The env_keys.lua file contains hardcoded paths to specific toolchain versions in `~/.espressif/tools/`. These paths include version numbers (e.g., `esp-14.2.0_20241119`) which may need updating as ESP-IDF's toolchain dependencies evolve.
-
-### Python Virtual Environment
-ESP-IDF creates Python virtual environments at `~/.espressif/python_env/idf{major}.{minor}_py{version}_env/`. The plugin dynamically detects the actual Python version directory using glob patterns instead of hardcoding a specific Python version.
+### Dynamic Environment Configuration
+The env_keys.lua file uses ESP-IDF's official `idf_tools.py export` command to get the correct environment for each version. This approach:
+- Calls `python3 {IDF_PATH}/tools/idf_tools.py export --format=key-value`
+- Parses the output to extract all necessary environment variables
+- Automatically includes the correct toolchain paths, Python virtual environment, and ESP-IDF specific variables
+- Works with any ESP-IDF version without hardcoding tool versions or Python versions
+- Ensures compatibility as ESP-IDF's toolchain dependencies evolve
 
 ## Testing Strategy
 
