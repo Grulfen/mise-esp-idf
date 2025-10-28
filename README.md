@@ -21,7 +21,7 @@ Install a specific ESP-IDF version:
 mise install esp-idf@latest
 
 # Install specific version
-mise install esp-idf@5.3.0
+mise install esp-idf@5.4.2
 
 # Install LTS version  
 mise install esp-idf@5.0.7
@@ -31,10 +31,10 @@ Set ESP-IDF version for your project:
 
 ```bash
 # Use ESP-IDF globally
-mise use -g esp-idf@5.3.0
+mise use -g esp-idf@5.4.2
 
 # Use ESP-IDF for current project only
-mise use esp-idf@5.3.0
+mise use esp-idf@5.4.2
 ```
 
 This will create a `.mise.toml` file in your project directory with the ESP-IDF version specification.
@@ -60,7 +60,7 @@ Create a `.mise.toml` file in your project root to ensure all developers use the
 
 ```toml
 [tools]
-esp-idf = "5.3.0"
+esp-idf = "5.4.2"
 ```
 
 Team members can then run:
@@ -94,12 +94,12 @@ mise plugin link --force esp-idf .
 
 2. Test installation of a specific version:
 ```bash
-mise install esp-idf@5.3.0
+mise install esp-idf@5.4.2
 ```
 
 3. Test environment setup:
 ```bash
-mise use esp-idf@5.3.0
+mise use esp-idf@5.4.2
 echo $IDF_PATH
 idf.py --version
 ```
@@ -108,7 +108,7 @@ idf.py --version
 
 Enable debug output to troubleshoot installation issues:
 ```bash
-MISE_DEBUG=1 mise install esp-idf@5.3.0
+MISE_DEBUG=1 mise install esp-idf@5.4.2
 ```
 
 ## How It Works
