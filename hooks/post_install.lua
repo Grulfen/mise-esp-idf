@@ -29,13 +29,6 @@ function PLUGIN:PostInstall(ctx)
     -- Determine target chips based on version
     local targets = "all" -- Install all targets by default
 
-    -- For older versions, we might want to be more specific
-    if version:match("^4%.") then
-        targets = "esp32,esp32s2"
-    elseif version:match("^5%.0") then
-        targets = "esp32,esp32s2,esp32s3,esp32c3"
-    end
-
     -- Run ESP-IDF install script
     print("Installing ESP-IDF tools for targets: " .. targets)
     local installCmd = string.format("cd %s && ./install.sh %s", path, targets)
@@ -63,19 +56,6 @@ function PLUGIN:PostInstall(ctx)
         file:write("fi\n")
         file:close()
         os.execute("chmod +x " .. verifyScript)
-    end
-
-    -- Create an idf.py wrapper script that properly sources the environment
-    local idfWrapper = path .. "/bin/idf.py"
-    local wrapperFile = io.open(idfWrapper, "w")
-    if wrapperFile then
-        wrapperFile:write("#!/bin/bash\n")
-        wrapperFile:write("# ESP-IDF idf.py wrapper script\n")
-        wrapperFile:write("# This script properly sources the ESP-IDF environment before calling idf.py\n")
-        wrapperFile:write('source "$IDF_PATH/export.sh" > /dev/null 2>&1\n')
-        wrapperFile:write('exec "$IDF_PATH/tools/idf.py" "$@"\n')
-        wrapperFile:close()
-        os.execute("chmod +x " .. idfWrapper)
     end
 
     print("ESP-IDF " .. version .. " installation completed successfully")
