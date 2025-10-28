@@ -10,14 +10,14 @@ This is a mise plugin for managing ESP-IDF (Espressif IoT Development Framework)
 
 The plugin follows the mise plugin lifecycle with four hook files in `hooks/`:
 
-1. **available.lua** - Fetches available ESP-IDF versions from GitHub API (`api.github.com/repos/espressif/esp-idf/tags`). Marks v4.4.x and v5.0.x as LTS versions.
+1. **available.lua** - Fetches available ESP-IDF versions from GitHub API (`api.github.com/repos/espressif/esp-idf/tags`).
 
 2. **pre_install.lua** - Minimal hook that returns version metadata. The actual download is skipped since ESP-IDF requires git cloning.
 
 3. **post_install.lua** - Core installation logic:
-   - Clones the ESP-IDF git repository for the requested version
-   - Runs `install.sh` to set up ESP-IDF toolchains (target chips vary by version)
-   - Creates wrapper scripts in `bin/` including `idf.py` wrapper and verification script
+   - Clones the ESP-IDF git repository for the requested version (quietly with --quiet flag)
+   - Runs `install.sh` to set up ESP-IDF toolchains (output redirected to reduce noise)
+   - Creates a verification script in `bin/esp-idf-verify`
 
 4. **env_keys.lua** - Configures environment variables:
    - Sets `IDF_PATH` to the installation directory
@@ -80,7 +80,7 @@ The post_install.lua hook selects ESP32 targets based on version:
 The env_keys.lua file contains hardcoded paths to specific toolchain versions in `~/.espressif/tools/`. These paths include version numbers (e.g., `esp-14.2.0_20241119`) which may need updating as ESP-IDF's toolchain dependencies evolve.
 
 ### Python Virtual Environment
-ESP-IDF creates Python virtual environments at `~/.espressif/python_env/idf{major}.{minor}_py3.9_env/`. The plugin calculates this path dynamically from the ESP-IDF version string.
+ESP-IDF creates Python virtual environments at `~/.espressif/python_env/idf{major}.{minor}_py{version}_env/`. The plugin dynamically detects the actual Python version directory using glob patterns instead of hardcoding a specific Python version.
 
 ## Testing Strategy
 
