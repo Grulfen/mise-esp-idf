@@ -13,9 +13,6 @@ function PLUGIN:PostInstall(ctx)
         error("git is required for ESP-IDF installation but was not found")
     end
 
-    -- Remove the path if it exists (mise might have created an empty directory)
-    os.execute("rm -rf " .. path)
-
     -- Clone ESP-IDF repository with the specific version (quietly)
     local gitCloneCmd = string.format(
         "git clone --quiet -b v%s --recursive https://github.com/espressif/esp-idf.git %s 2>&1",
