@@ -28,11 +28,8 @@ function PLUGIN:PostInstall(ctx)
         error("Failed to clone ESP-IDF repository for version " .. version)
     end
 
-    -- Determine target chips based on version
-    local targets = "all" -- Install all targets by default
-
     -- Run ESP-IDF install script (redirect output to reduce noise)
-    local installCmd = string.format("cd %s && ./install.sh %s > /dev/null 2>&1", path, targets)
+    local installCmd = string.format("cd %s && ./install.sh all > /dev/null 2>&1", path)
     local installResult = os.execute(installCmd)
     if installResult ~= 0 then
         error("Failed to install ESP-IDF tools")
