@@ -18,6 +18,18 @@ function PLUGIN:EnvKeys(ctx)
             value = mainPath,
         },
     }
+    local path_entries = {}
+    local idf_python_env_path = nil
+
+    local function add_path_entry(path_entry)
+        if path_entry ~= "$PATH" and path_entry ~= "" and not path_entries[path_entry] then
+            path_entries[path_entry] = true
+            table.insert(env_vars, {
+                key = "PATH",
+                value = path_entry,
+            })
+        end
+    end
 
     -- Ask ESP-IDF for the environment in a clean shell so previously active
     -- ESP-IDF variables do not leak across projects or versions.
@@ -37,14 +49,13 @@ function PLUGIN:EnvKeys(ctx)
                 if key == "PATH" then
                     -- Split PATH by colon and add each directory (except the $PATH placeholder)
                     for path_entry in value:gmatch("([^:]+)") do
-                        if path_entry ~= "$PATH" and path_entry ~= "" then
-                        table.insert(env_vars, {
-                            key = "PATH",
-                            value = path_entry,
-                        })
-                        end
+                        add_path_entry(path_entry)
                     end
                 elseif key ~= "IDF_DEACTIVATE_FILE_PATH" then
+                    if key == "IDF_PYTHON_ENV_PATH" then
+                        idf_python_env_path = value
+                    end
+
                     -- Add other environment variables (skip the temp deactivate file)
                     table.insert(env_vars, {
                         key = key,
@@ -76,8 +87,12 @@ function PLUGIN:EnvKeys(ctx)
         os.remove(error_file)
     end
 
-    -- Note: Python virtual environment variables (VIRTUAL_ENV, IDF_PYTHON_ENV_PATH)
-    -- and Python venv PATH entries are automatically provided by idf_tools.py export above
+    -- Older ESP-IDF versions only emit these PATH entries when they are not
+    -- already present in PATH. mise needs the hook result to be deterministic.
+    if idf_python_env_path and idf_python_env_path ~= "" then
+        add_path_entry(idf_python_env_path .. "/bin")
+    end
+    add_path_entry(mainPath .. "/tools")
 
     -- Platform-specific additions
     if RUNTIME.osType == "Darwin" then -- luacheck: ignore 113
