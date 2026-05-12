@@ -4,9 +4,40 @@
 
 function PLUGIN:EnvKeys(ctx)
     local mainPath = ctx.path
+    local home = os.getenv("HOME")
+    local idf_tools_path = os.getenv("IDF_TOOLS_PATH") or (home and home .. "/.espressif")
 
     local function shell_quote(value)
         return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+    end
+
+    local function read_first_line(command)
+        local handle = io.popen(command)
+        if not handle then
+            return nil
+        end
+
+        local line = handle:read("*l")
+        handle:close()
+
+        if line and line ~= "" then
+            return line
+        end
+        return nil
+    end
+
+    local function find_idf_python_env_path()
+        local idf_version = tostring(ctx.version):match("^(%d+%.%d+)")
+        if not idf_tools_path or not idf_version then
+            return nil
+        end
+
+        local find_cmd = string.format(
+            'for py in %s/python_env/idf%s_py*_env/bin/python; do [ -x "$py" ] && dirname "$(dirname "$py")" && break; done',
+            shell_quote(idf_tools_path),
+            idf_version
+        )
+        return read_first_line(find_cmd)
     end
 
     -- ESP-IDF requires several environment variables to function properly
@@ -19,7 +50,7 @@ function PLUGIN:EnvKeys(ctx)
         },
     }
     local path_entries = {}
-    local idf_python_env_path = nil
+    local idf_python_env_path = find_idf_python_env_path()
 
     local function add_path_entry(path_entry)
         if path_entry ~= "$PATH" and path_entry ~= "" and not path_entries[path_entry] then
@@ -31,12 +62,25 @@ function PLUGIN:EnvKeys(ctx)
         end
     end
 
-    -- Ask ESP-IDF for the environment in a clean shell so previously active
-    -- ESP-IDF variables do not leak across projects or versions.
+    -- Ask ESP-IDF for the environment in a minimal shell so it emits the full
+    -- environment instead of diffing against the currently active project.
     local error_file = os.tmpname()
+    local python = idf_python_env_path and (idf_python_env_path .. "/bin/python") or "python3"
+    local clean_env = {
+        "env -i",
+        "PATH='/usr/bin:/bin:/usr/sbin:/sbin'",
+        "IDF_PATH=" .. shell_quote(mainPath),
+    }
+    if home then
+        table.insert(clean_env, "HOME=" .. shell_quote(home))
+    end
+    if idf_tools_path then
+        table.insert(clean_env, "IDF_TOOLS_PATH=" .. shell_quote(idf_tools_path))
+    end
     local idf_tools_cmd = string.format(
-        "env -u IDF_PATH -u IDF_PYTHON_ENV_PATH -u ESP_IDF_VERSION -u IDF_DEACTIVATE_FILE_PATH IDF_PATH=%s python3 %s export --format=key-value 2>%s",
-        shell_quote(mainPath),
+        "%s %s %s export --format=key-value 2>%s",
+        table.concat(clean_env, " "),
+        shell_quote(python),
         shell_quote(mainPath .. "/tools/idf_tools.py"),
         shell_quote(error_file)
     )
@@ -87,21 +131,20 @@ function PLUGIN:EnvKeys(ctx)
         os.remove(error_file)
     end
 
-    -- Older ESP-IDF versions only emit these PATH entries when they are not
-    -- already present in PATH. mise needs the hook result to be deterministic.
+    -- Add deterministic fallback PATH entries if ESP-IDF did not emit them.
     if idf_python_env_path and idf_python_env_path ~= "" then
         add_path_entry(idf_python_env_path .. "/bin")
     end
     add_path_entry(mainPath .. "/tools")
 
     -- Platform-specific additions
-    if RUNTIME.osType == "Darwin" then -- luacheck: ignore 113
+    if RUNTIME.osType == "darwin" then -- luacheck: ignore 113
         -- macOS specific paths if needed
         table.insert(env_vars, {
             key = "DYLD_LIBRARY_PATH",
             value = mainPath .. "/tools/lib",
         })
-    elseif RUNTIME.osType == "Linux" then -- luacheck: ignore 113
+    elseif RUNTIME.osType == "linux" then -- luacheck: ignore 113
         -- Linux specific paths
         table.insert(env_vars, {
             key = "LD_LIBRARY_PATH",
