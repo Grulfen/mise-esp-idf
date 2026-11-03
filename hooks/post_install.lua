@@ -19,7 +19,7 @@ function PLUGIN:PostInstall(ctx)
 
     -- Clone ESP-IDF repository with the specific version (quietly)
     local gitCloneCmd = string.format(
-        "git clone --quiet -b v%s --recursive https://github.com/espressif/esp-idf.git %s 2>&1",
+        "git clone --quiet --depth=1 --shallow-submodules -b v%s --recursive https://github.com/espressif/esp-idf.git %s 2>&1",
         version,
         shell_quote(path)
     )
